@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image
+import cv2
 
 def DepthNorm(x, maxDepth):
     return maxDepth / x
@@ -30,6 +31,30 @@ def load_images(image_files):
         x = np.clip(np.asarray(Image.open( file ), dtype=float) / 255, 0, 1)
         loaded_images.append(x)
     return np.stack(loaded_images, axis=0)
+
+def load_images_cv(image_files):
+    loaded_images = []
+    for file in image_files:
+        img = cv2.imread(file)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = np.clip(np.asanyarray(img, dtype=float) / 255, 0, 1)
+        loaded_images.append(img)
+    return np.stack(loaded_images, axis=0)
+
+def distance_to_image(img):
+    max = np.amax(img)
+    min = np.amin(img)
+
+    img = img - min
+    img = np.clip(img * (1.0 / (max - min) * 255.0), 10, 250)
+    img = np.asarray(img, dtype=np.uint8)
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    for i in img:
+        for j in i:
+            gray = j[0]
+            j[1] = 0
+            j[2] = 256 - gray
+    return img
 
 def to_multichannel(i):
     if i.shape[2] == 3: return i
